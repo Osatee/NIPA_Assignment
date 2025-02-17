@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import './Dashboard.css';
 
@@ -9,36 +9,63 @@ function Dashboard() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [sortBy, setSortBy] = useState('updated_at');
   const [sortOrder, setSortOrder] = useState('desc');
+  const [currentPage, setCurrentPage] = useState(1);
+  const ticketsPerPage = 5;
 
-  const fetchTickets = async () => {
+  const fetchTickets = useCallback(async () => {
     try {
-      const response = await fetch(
-        `http://localhost:8080/api/v1/tickets?status=${statusFilter}&sort=${sortBy}&order=${sortOrder}`
-      );
+      setLoading(true);
+      const statusQuery = statusFilter === 'all' ? '' : `&status=${statusFilter}`;
+      const sortQuery = `&sortBy=${sortBy}&sortOrder=${sortOrder}`;
+      const response = await fetch(`http://localhost:8080/api/v1/tickets/?${statusQuery}${sortQuery}`);
       
       if (!response.ok) {
         throw new Error('Failed to fetch tickets');
       }
-      
-      const data = await response.json();
+    
+      let data = await response.json();
+    
+      if (data.tickets) {
+        data.tickets.sort((a, b) => {
+          if (sortBy === 'updated_at') {
+            return sortOrder === 'asc' 
+              ? new Date(a.updated_at) - new Date(b.updated_at) 
+              : new Date(b.updated_at) - new Date(a.updated_at);
+          }
+          if (sortBy === 'created_at') {
+            return sortOrder === 'asc' 
+              ? new Date(a.created_at) - new Date(b.created_at)
+              : new Date(b.created_at) - new Date(a.created_at);
+          }
+          if (sortBy === 'title') {
+            return sortOrder === 'asc' 
+              ? a.title.localeCompare(b.title) 
+              : b.title.localeCompare(a.title);
+          }
+          return 0;
+        });
+      }
+
       setTickets(data.tickets || []);
     } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
-  };
-
+  }, [statusFilter, sortBy, sortOrder]);
+  
   useEffect(() => {
     fetchTickets();
-  }, [statusFilter, sortBy, sortOrder]);
+  }, [fetchTickets]);
 
   const handleStatusChange = (e) => {
     setStatusFilter(e.target.value);
   };
 
   const handleSortChange = (e) => {
-    setSortBy(e.target.value);
+    const newSortBy = e.target.value;
+    setSortBy(newSortBy);
+    setSortOrder(newSortBy === 'created_at' ? 'asc' : 'desc');
   };
 
   const toggleSortOrder = () => {
@@ -52,6 +79,22 @@ function Dashboard() {
       case 'resolved': return 'status-resolved';
       case 'rejected': return 'status-rejected';
       default: return '';
+    }
+  };
+
+  const indexOfLastTicket = currentPage * ticketsPerPage;
+  const indexOfFirstTicket = indexOfLastTicket - ticketsPerPage;
+  const currentTickets = tickets.slice(indexOfFirstTicket, indexOfLastTicket);
+
+  const nextPage = () => {
+    if (currentPage < Math.ceil(tickets.length / ticketsPerPage)) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const prevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
     }
   };
 
@@ -69,11 +112,7 @@ function Dashboard() {
       <div className="filters">
         <div className="filter-group">
           <label htmlFor="statusFilter">Status:</label>
-          <select 
-            id="statusFilter"
-            value={statusFilter}
-            onChange={handleStatusChange}
-          >
+          <select id="statusFilter" value={statusFilter} onChange={handleStatusChange}>
             <option value="all">All Tickets</option>
             <option value="pending">Pending</option>
             <option value="accepted">Accepted</option>
@@ -84,19 +123,12 @@ function Dashboard() {
         
         <div className="filter-group">
           <label htmlFor="sortBy">Sort by:</label>
-          <select 
-            id="sortBy"
-            value={sortBy}
-            onChange={handleSortChange}
-          >
+          <select id="sortBy" value={sortBy} onChange={handleSortChange}>
             <option value="updated_at">Latest Update</option>
             <option value="created_at">Creation Date</option>
             <option value="title">Title</option>
           </select>
-          <button 
-            className="btn-sort-order"
-            onClick={toggleSortOrder}
-          >
+          <button className="btn-sort-order" onClick={toggleSortOrder}>
             {sortOrder === 'asc' ? '↑' : '↓'}
           </button>
         </div>
@@ -108,7 +140,7 @@ function Dashboard() {
         </div>
       ) : (
         <div className="ticket-list">
-          {tickets.map(ticket => (
+          {currentTickets.map(ticket => (
             <Link to={`/tickets/${ticket.id}`} key={ticket.id} className="ticket-card">
               <div className="ticket-header">
                 <h3>{ticket.title}</h3>
@@ -119,14 +151,18 @@ function Dashboard() {
               <p className="ticket-desc">{ticket.description.substring(0, 150)}...</p>
               <div className="ticket-footer">
                 <span className="ticket-id">ID: {ticket.id}</span>
-                <span className="ticket-date">
-                  Updated: {new Date(ticket.updated_at).toLocaleString()}
-                </span>
+                <span className="ticket-date">Updated: {new Date(ticket.updated_at).toLocaleString()}</span>
               </div>
             </Link>
           ))}
         </div>
       )}
+      
+      <div className="pagination">
+        <button onClick={prevPage} disabled={currentPage === 1}>Previous</button>
+        <span> Page {currentPage} of {Math.ceil(tickets.length / ticketsPerPage)} </span>
+        <button onClick={nextPage} disabled={currentPage === Math.ceil(tickets.length / ticketsPerPage)}>Next</button>
+      </div>
     </div>
   );
 }

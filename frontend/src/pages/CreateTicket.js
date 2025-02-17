@@ -3,22 +3,24 @@ import { useNavigate } from 'react-router-dom';
 import './CreateTicket.css';
 
 function CreateTicket() {
+  const navigate = useNavigate();
   const [ticket, setTicket] = useState({
     title: '',
     description: '',
-    contactName: '',
-    contactEmail: '',
-    contactPhone: ''
+    contact_name: '',
+    contact_email: '',
+    contact_phone: '',
+    status: 'pending',
   });
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const navigate = useNavigate();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setTicket(prev => ({
+    setTicket((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
@@ -26,30 +28,20 @@ function CreateTicket() {
     e.preventDefault();
     setLoading(true);
     setError('');
-    
+
     try {
       const response = await fetch('http://localhost:8080/api/v1/tickets/create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          title: ticket.title,
-          description: ticket.description,
-          contact_info: {
-            name: ticket.contactName,
-            email: ticket.contactEmail,
-            phone: ticket.contactPhone
-          }
-        }),
+        body: JSON.stringify(ticket),
       });
-      
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to create ticket');
+        throw new Error('Failed to create ticket');
       }
-      
-      const data = await response.json();
+
       navigate('/');
     } catch (err) {
       setError(err.message);
@@ -60,13 +52,11 @@ function CreateTicket() {
 
   return (
     <div className="create-ticket">
-      <h1>Create New Support Ticket</h1>
-      
+      <h1>Create New Ticket</h1>
       {error && <div className="error-message">{error}</div>}
-      
       <form onSubmit={handleSubmit}>
         <div className="form-group">
-          <label htmlFor="title">Ticket Title</label>
+          <label htmlFor="title">Title</label>
           <input
             type="text"
             id="title"
@@ -76,7 +66,7 @@ function CreateTicket() {
             required
           />
         </div>
-        
+
         <div className="form-group">
           <label htmlFor="description">Description</label>
           <textarea
@@ -84,57 +74,61 @@ function CreateTicket() {
             name="description"
             value={ticket.description}
             onChange={handleChange}
-            rows="6"
+            rows="4"
             required
           />
         </div>
-        
+
         <h2>Contact Information</h2>
-        
+
         <div className="form-group">
-          <label htmlFor="contactName">Name</label>
+          <label htmlFor="contact_name">Name</label>
           <input
             type="text"
-            id="contactName"
-            name="contactName"
-            value={ticket.contactName}
+            id="contact_name"
+            name="contact_name"
+            value={ticket.contact_name}
             onChange={handleChange}
             required
           />
         </div>
-        
+
         <div className="form-group">
-          <label htmlFor="contactEmail">Email</label>
+          <label htmlFor="contact_email">Email</label>
           <input
             type="email"
-            id="contactEmail"
-            name="contactEmail"
-            value={ticket.contactEmail}
+            id="contact_email"
+            name="contact_email"
+            value={ticket.contact_email}
             onChange={handleChange}
             required
           />
         </div>
-        
+
         <div className="form-group">
-          <label htmlFor="contactPhone">Phone (optional)</label>
+          <label htmlFor="contact_phone">Phone</label>
           <input
             type="tel"
-            id="contactPhone"
-            name="contactPhone"
-            value={ticket.contactPhone}
+            id="contact_phone"
+            name="contact_phone"
+            value={ticket.contact_phone}
             onChange={handleChange}
           />
         </div>
-        
-        <div className="form-actions">
-          <button 
-            type="submit"
-            className="btn btn-primary"
-            disabled={loading}
-          >
-            {loading ? 'Creating...' : 'Create Ticket'}
-          </button>
+
+        <div className="form-group">
+          <label htmlFor="status">Ticket Status</label>
+          <select id="status" name="status" value={ticket.status} onChange={handleChange} required>
+            <option value="pending">Pending</option>
+            <option value="accepted">Accepted</option>
+            <option value="resolved">Resolved</option>
+            <option value="rejected">Rejected</option>
+          </select>
         </div>
+
+        <button type="submit" className="btn btn-create" disabled={loading}>
+          {loading ? 'Creating...' : 'Create Ticket'}
+        </button>
       </form>
     </div>
   );

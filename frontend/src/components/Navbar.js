@@ -8,10 +8,6 @@ function Navbar() {
       <div className="navbar-brand">
         <Link to="/">Helpdesk Ticket System</Link>
       </div>
-      <div className="navbar-menu">
-        <Link to="/" className="nav-item">Dashboard</Link>
-        <Link to="/create" className="nav-item">Create Ticket</Link>
-      </div>
     </nav>
   );
 }

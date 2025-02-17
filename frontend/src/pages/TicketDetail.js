@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import './TicketDetail.css';
 
@@ -11,11 +11,7 @@ function TicketDetail() {
   const [isEditing, setIsEditing] = useState(false);
   const [updatedTicket, setUpdatedTicket] = useState({});
 
-  useEffect(() => {
-    fetchTicket();
-  }, [id]);
-
-  const fetchTicket = async () => {
+  const fetchTicket = useCallback(async () => {
     try {
       const response = await fetch(`http://localhost:8080/api/v1/tickets/${id}`);
       
@@ -31,7 +27,11 @@ function TicketDetail() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    fetchTicket();
+  }, [fetchTicket])
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -149,7 +149,7 @@ function TicketDetail() {
               type="text"
               id="name"
               name="name"
-              value={updatedTicket.contact_info.name}
+              value={updatedTicket.contact_name}
               onChange={handleContactChange}
               required
             />
@@ -161,7 +161,7 @@ function TicketDetail() {
               type="email"
               id="email"
               name="email"
-              value={updatedTicket.contact_info.email}
+              value={updatedTicket.contact_email}
               onChange={handleContactChange}
               required
             />
@@ -173,7 +173,7 @@ function TicketDetail() {
               type="tel"
               id="phone"
               name="phone"
-              value={updatedTicket.contact_info.phone || ''}
+              value={updatedTicket.contact_phone || ''}
               onChange={handleContactChange}
             />
           </div>
@@ -204,10 +204,10 @@ function TicketDetail() {
           <div className="ticket-section">
             <h3>Contact Information</h3>
             <div className="contact-info">
-              <p><strong>Name:</strong> {ticket.contact_info.name}</p>
-              <p><strong>Email:</strong> {ticket.contact_info.email}</p>
-              {ticket.contact_info.phone && (
-                <p><strong>Phone:</strong> {ticket.contact_info.phone}</p>
+              <p><strong>Name:</strong> {ticket.contact_name}</p>
+              <p><strong>Email:</strong> {ticket.contact_email}</p>
+              {ticket.contact_phone && (
+                <p><strong>Phone:</strong> {ticket.contact_phone}</p>
               )}
             </div>
           </div>

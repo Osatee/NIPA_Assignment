@@ -10,6 +10,7 @@ import (
 	"github.com/Osatee/NIPA_Assignment/internal/config"
 	"github.com/Osatee/NIPA_Assignment/internal/handlers"
 	"github.com/Osatee/NIPA_Assignment/pkg/database"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -50,6 +51,17 @@ func main() {
 	r := gin.Default()
 	r.Use(TimeoutMiddleware(5 * time.Second))
 
+	configCors := cors.Config{
+		AllowOrigins:     []string{"http://localhost:3000", "http://localhost:4000"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization", "API-Key"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}
+	r.Use(cors.New(configCors))
+	r.Use(TimeoutMiddleware(5 * time.Second))
+
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "healthy"})
 	})
@@ -58,7 +70,11 @@ func main() {
 	{
 		tickets := v1.Group("/tickets")
 		{
+			tickets.GET("/", h.GetTicket)
+			tickets.GET("/:id", h.GetTicketById)
 			tickets.POST("/create", h.CreateTicket)
+			tickets.PUT("/:id", h.UpdateTicket)
+			tickets.PUT(":id/status", h.UpdateTicketStatus)
 		}
 	}
 
