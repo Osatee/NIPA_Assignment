@@ -1,4 +1,3 @@
-// src/pages/Dashboard.js
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import './Dashboard.css';
@@ -13,7 +12,6 @@ function Dashboard() {
 
   const fetchTickets = async () => {
     try {
-      // We'll update this to use your actual API endpoint
       const response = await fetch(
         `http://localhost:8080/api/v1/tickets?status=${statusFilter}&sort=${sortBy}&order=${sortOrder}`
       );
