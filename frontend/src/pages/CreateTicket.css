@@ -1,0 +1,49 @@
+.create-ticket {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    padding: 2rem;
+  }
+  
+  .create-ticket h1 {
+    font-size: 1.75rem;
+    color: #1e293b;
+    margin-bottom: 1.5rem;
+  }
+  
+  .create-ticket h2 {
+    font-size: 1.25rem;
+    color: #1e293b;
+    margin: 1.5rem 0 1rem;
+  }
+  
+  .form-group {
+    margin-bottom: 1.25rem;
+  }
+  
+  .form-group label {
+    display: block;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    color: #334155;
+  }
+  
+  .form-group input,
+  .form-group textarea,
+  .form-group select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    font-size: 1rem;
+    font-family: inherit;
+  }
+  
+  .form-group textarea {
+    resize: vertical;
+    min-height: 100px;
+  }
+  
+  .form-actions {
+    margin-top: 2rem;
+  }
